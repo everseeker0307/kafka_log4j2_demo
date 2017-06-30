@@ -31,6 +31,7 @@ public class ConsumerHandler<K, V> {
         // consumer自动commit，每隔1秒钟commit一次
         props.put("enable.auto.commit", "true");
         props.put("auto.commit.interval.ms", "1000");
+        // 如果30s内没有收到消费者的心跳，则从消费组中删除该消费者
         props.put("session.timeout.ms", "30000");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -38,21 +39,31 @@ public class ConsumerHandler<K, V> {
         consumer.subscribe(Arrays.asList(topic));
     }
 
+    /**
+     * kafka中一个分区的数据只能由一个消费者消费(每一个consumer-group), 并且只保证同一分区内的数据有序。
+     * @param threadNum： 如果消费者线程数设置为1，可以顺序读取分区中的数据
+     */
     public void execute(int threadNum) {
         executors = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<Runnable>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
+        System.out.println("sub: " + consumer.subscription());
 
-        while (true) {
-            ConsumerRecords<K, V> records = consumer.poll(5);
-            for (final ConsumerRecord record : records) {
-                executors.submit(new ConsumerWorker(record) {
-                    @Override
-                    public void run() {
-                        System.out.println("key=" + record.key() + ", value=" + record.value());
-                        System.out.println("partition=" + record.partition() + ", offset=" + record.offset());
-                    }
-                });
+        try {
+            while (true) {
+                ConsumerRecords<K, V> records = consumer.poll(100); // 每隔100ms从kafka中pull一次数据
+                for (final ConsumerRecord record : records) {
+                    executors.submit(new ConsumerWorker(record) {
+                        @Override
+                        public void run() {
+                            System.out.println("offset=" + record.offset() + ", value=" + record.value());
+                        }
+                    });
+                }
             }
+        } finally {
+            consumer.close();
+            System.out.println("exit");
         }
+
     }
 }

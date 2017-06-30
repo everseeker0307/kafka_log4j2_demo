@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.everseeker</groupId>
-	<artifactId>kafka_log4j_demo</artifactId>
+	<artifactId>kafka_log4j2_demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

@@ -13,8 +13,8 @@ Configuration:
         pattern: "%d{yyyy-MM-dd HH:mm:ss, SSS}:%4p %t (%F:%L) - %m%n"
 #    RollingFile:  # 输出到文件
     Kafka:  # 输出到kafka
-      - name: kafka
-        topic: kafka_log4j2_demo  # 如果kafka集群中没有此topic，会自动创建1分区1副本的topic；如果需要多分区多副本，可以预先在kafka集群中创建好
+      - name: kafka1
+        topic: topic1  # 如果kafka集群中没有此topic，会自动创建1分区1副本的topic；如果需要多分区多副本，可以预先在kafka集群中创建好
         ThresholdFilter:  # 过滤条件，只发送info以上级别的日志
           level: info
           onMatch: accept
@@ -25,7 +25,7 @@ Configuration:
           name: bootstrap.servers
           value: 192.168.99.100:9092, 192.168.99.101:9092, 192.168.99.102:9092
       - name: kafka2
-        topic: test
+        topic: topic2
         ThresholdFilter:
           level: info
           onMatch: accept
@@ -41,7 +41,7 @@ Configuration:
       level: info
       AppenderRef:
         - ref: console
-        - ref: kafka
+        - ref: kafka1
         - ref: kafka2
     Logger:
       - name: org.apache.kafka  # 避免递归调用
